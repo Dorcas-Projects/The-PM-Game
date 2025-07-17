@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM Interview Master</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .game-subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .menu-screen, .game-screen, .result-screen, .badges-screen {
+            display: none;
+        }
+
+        .menu-screen.active, .game-screen.active, .result-screen.active, .badges-screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .level-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .level-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .level-card.locked {
+            background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%) !important;
+            cursor: not-allowed !important;
+        }
+
+        .level-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+        }
+
+        .level-card.locked:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .level-card h3 {
+            color: white;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .level-card p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .question-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-number {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .timer {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1.1em;
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .timer.warning {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .option.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .score {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .lives {
+            display: flex;
+            gap: 5px;
+        }
+
+        .heart {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .heart.lost {
+            transform: scale(0);
+            opacity: 0.3;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .badge {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            animation: bounceIn 1s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        .result-stats {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .stat-item {
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-right: 10px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .badge-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .badge-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .badge-item.earned {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+        }
+
+        .badge-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .badge-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .powerup-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .powerup {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #74b9ff 0%, #a29bfe 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            font-size: 1.5em;
+            position: relative;
+        }
+
+        .powerup:hover {
+            transform: scale(1.1);
+        }
+
+        .powerup.used {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            bottom: 70px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .powerup:hover .tooltip {
+            opacity: 1;
+        }
+
+        .explanation {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .explanation h4 {
+            color: #2196f3;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            .game-title {
+                font-size: 2em;
+            }
+            
+            .level-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .powerup-container {
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .powerup {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">PM Interview Master</h1>
+            <p class="game-subtitle">Level up your Product Management skills!</p>
+        </div>
+
+        <!-- Menu Screen -->
+        <div class="menu-screen active">
+            <div class="level-grid">
+                <div class="level-card" id="level-1" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); cursor: pointer;">
+                    <h3>Level 1</h3>
+                    <p>Foundation</p>
+                    <p>⭐ Basic PM Concepts</p>
+                </div>
+                <div class="level-card locked" id="level-2" style="background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%); cursor: not-allowed; position: relative;">
+                    <h3>Level 2</h3>
+                    <p>Case Studies</p>
+                    <p>⭐⭐ Complex Decisions</p>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 24px;">🔒</div>
+                </div>
+                <div class="level-card locked" id="level-3" style="background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%); cursor: not-allowed; position: relative;">
+                    <h3>Level 3</h3>
+                    <p>AI/ML PM</p>
+                    <p>⭐⭐⭐ AI Product Strategy</p>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 24px;">🔒</div>
+                </div>
+                <div class="level-card locked" id="level-4" style="background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%); cursor: not-allowed; position: relative;">
+                    <h3>Level 4</h3>
+                    <p>PM Excellence</p>
+                    <p>⭐⭐⭐⭐ Expert Scenarios</p>
+                    <div style="position: absolute; top: 10px; right: 10px; font-size: 24px;">🔒</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn" onclick="showBadges()">🏆 View Badges</button>
+                <button class="btn btn-back" onclick="resetProgress()">🔄 Reset Progress</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-screen">
+            <div class="question-header">
+                <span class="question-number">Question 1/20</span>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-back" onclick="window.forceBack()" style="padding: 10px 20px; font-size: 1em;">← Back</button>
+                    <button class="btn" onclick="window.forceRestart()" style="padding: 10px 20px; font-size: 1em; background: linear-gradient(135deg, #ff7675 0%, #e84393 100%);">🔄 Restart</button>
+                </div>
+                <div class="timer">
+                    <span>⏱️</span>
+                    <span id="timer">30</span>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 5%"></div>
+            </div>
+
+            <div class="score-display">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div style="color: #666; font-size: 0.9em;">Pass: 10/20</div>
+                <div class="lives">
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                </div>
+            </div>
+
+            <div class="question-container">
+                <div class="question-text" id="question-text">
+                    Loading question...
+                </div>
+                <div class="options-container" id="options-container">
+                    <!-- Options will be dynamically inserted -->
+                </div>
+                <div class="explanation" id="explanation" style="display: none;">
+                    <h4>Explanation</h4>
+                    <p id="explanation-text"></p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" id="next-btn" onclick="window.nextQuestion()" disabled>Next Question</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div class="result-screen">
+            <div class="badge-container">
+                <div class="badge" id="earned-badge">
+                    <!-- Badge will be inserted here -->
+                </div>
+            </div>
+            
+            <h2 style="text-align: center; color: #667eea; margin: 20px 0;">Level Complete!</h2>
+            
+            <div class="result-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Final Score:</span>
+                    <span class="stat-value" id="final-score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Correct Answers:</span>
+                    <span class="stat-value" id="correct-answers">0/20</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Time Bonus:</span>
+                    <span class="stat-value" id="time-bonus">+0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Accuracy:</span>
+                    <span class="stat-value" id="accuracy">0%</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-back" onclick="backToMenu()">← Back to Menu</button>
+                <button class="btn" onclick="retryLevel()" style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);">🔄 Try Again</button>
+                <button class="btn" onclick="startLevel(gameState.currentLevel)" style="background: linear-gradient(135deg, #ff7675 0%, #e84393 100%);">🎲 New Questions</button>
+            </div>
+        </div>
+
+        <!-- Badges Screen -->
+        <div class="badges-screen">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 30px;">Your Badge Collection</h2>
+            <div class="badges-grid" id="badges-grid">
+                <!-- Badges will be dynamically inserted -->
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-back" onclick="backToMenu()">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Power-ups -->
+    <div class="powerup-container" style="display: none;">
+        <div class="powerup" id="freeze-time" onclick="usePowerup('freeze')">
+            ❄️
+            <span class="tooltip">Freeze Time (1 use)</span>
+        </div>
+        <div class="powerup" id="fifty-fifty" onclick="usePowerup('fifty')">
+            50
+            <span class="tooltip">50/50 (2 uses)</span>
+        </div>
+        <div class="powerup" id="skip" onclick="usePowerup('skip')">
+            ⏭️
+            <span class="tooltip">Skip Question (1 use)</span>
+        </div>
+    </div>
+
+    <script>
+        // Game State - Ensure only level 1 is unlocked initially
+        let gameState = {
+            currentLevel: 1,
+            currentQuestion: 0,
+            score: 0,
+            lives: 3,
+            correctAnswers: 0,
+            timeLeft: 30,
+            timerInterval: null,
+            selectedOption: null,
+            powerups: {
+                freeze: 1,
+                fifty: 2,
+                skip: 1
+            },
+            unlockedLevels: [1], // Only level 1 unlocked initially
+            earnedBadges: [],
+            currentQuestionSet: [],
+            usedQuestions: {}
+        };
+
+        // Function to unlock a level - Define early to ensure it's available
+        function unlockLevel(levelNumber) {
+            console.log(`Unlocking Level ${levelNumber}`);
+            
+            if (!gameState.unlockedLevels.includes(levelNumber)) {
+                gameState.unlockedLevels.push(levelNumber);
+            }
+            
+            const levelElement = document.getElementById(`level-${levelNumber}`);
+            if (levelElement) {
+                levelElement.classList.remove('locked');
+                levelElement.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                levelElement.style.cursor = 'pointer';
+                
+                // Remove lock icon
+                const lockIcon = levelElement.querySelector('div[style*="position: absolute"]');
+                if (lockIcon) {
+                    lockIcon.remove();
+                }
+            }
+            
+            saveProgress();
+        }
+
+        function showLockedMessage() {
+            alert('🔒 Complete the previous level to unlock this one!');
+        }
+
+        // Main navigation functions (no confirmation needed for better UX)
+        window.forceBack = function() {
+            console.log('← Back button clicked - returning to menu');
+            clearInterval(gameState.timerInterval);
+            const powerupContainer = document.querySelector('.powerup-container');
+            if (powerupContainer) {
+                powerupContainer.style.display = 'none';
+            }
+            backToMenu();
+        };
+
+        window.forceRestart = function() {
+            console.log('🔄 Restart button clicked - restarting with fresh questions');
+            clearInterval(gameState.timerInterval);
+            const currentLevel = gameState.currentLevel;
+            startLevel(currentLevel);
+        };
+
+        window.nextQuestion = function() {
+            console.log('nextQuestion called');
+            // Check if game should end due to no lives
+            if (gameState.lives <= 0) {
+                console.log('Game over - no lives left');
+                endLevel(false); // Game over
+                return;
+            }
+            
+            gameState.currentQuestion++;
+            console.log('Moving to question:', gameState.currentQuestion + 1);
+            
+            // Check if we've completed all questions
+            if (gameState.currentQuestion >= gameState.currentQuestionSet.length) {
+                console.log('All questions completed');
+                endLevel(true); // Completed all questions
+            } else {
+                console.log('Loading next question');
+                loadQuestion(); // Load next question
+            }
+        };
+
+        function confirmQuit() {
+            window.confirmQuit();
+        }
+
+        function confirmRestart() {
+            window.confirmRestart();
+        }
+
+        function backToMenu() {
+            console.log('backToMenu function called');
+            // Ensure we stop any running timers
+            clearInterval(gameState.timerInterval);
+            console.log('Timer cleared');
+            
+            // Hide powerups
+            const powerupContainer = document.querySelector('.powerup-container');
+            if (powerupContainer) {
+                powerupContainer.style.display = 'none';
+                console.log('Powerups hidden');
+            }
+            
+            console.log('Switching to menu screen...');
+            showScreen('menu');
+            console.log('Updating menu display...');
+            updateMenuDisplay();
+            console.log('Back to menu completed');
+        }
+
+        function retryLevel() {
+            // Retry with fresh questions
+            const currentLevel = gameState.currentLevel;
+            console.log(`🔄 Retrying Level ${currentLevel} with fresh questions`);
+            startLevel(currentLevel);
+        }
+
+        // Questions Database - Now with proper level progression
+        const questions = {
+            1: [
+                // Level 1: Basic PM Concepts
+                {
+                    question: "What is the primary role of a Product Manager?",
+                    options: [
+                        "Writing code for the product",
+                        "Defining the product vision and strategy",
+                        "Managing the sales team",
+                        "Designing the user interface"
+                    ],
+                    correct: 1,
+                    explanation: "A Product Manager's primary role is to define the product vision and strategy, acting as the bridge between business, technology, and user needs."
+                },
+                {
+                    question: "Which framework is commonly used for prioritizing features?",
+                    options: [
+                        "RICE (Reach, Impact, Confidence, Effort)",
+                        "SWIFT (Speed, Worth, Investment, Fun, Time)",
+                        "QUICK (Quality, Urgency, Impact, Cost, Knowledge)",
+                        "FAST (Features, Analytics, Strategy, Testing)"
+                    ],
+                    correct: 0,
+                    explanation: "RICE is a popular prioritization framework that considers Reach, Impact, Confidence, and Effort to score and rank features."
+                },
+                {
+                    question: "What does MVP stand for in product development?",
+                    options: [
+                        "Most Valuable Player",
+                        "Minimum Viable Product",
+                        "Maximum Value Proposition",
+                        "Market Validation Process"
+                    ],
+                    correct: 1,
+                    explanation: "MVP stands for Minimum Viable Product - the simplest version of a product that can be released to test core assumptions and gather user feedback."
+                },
+                {
+                    question: "Which metric best measures user engagement?",
+                    options: [
+                        "Total number of downloads",
+                        "Daily Active Users (DAU)",
+                        "Revenue per quarter",
+                        "Number of features shipped"
+                    ],
+                    correct: 1,
+                    explanation: "Daily Active Users (DAU) is a key engagement metric that shows how many unique users interact with your product each day."
+                },
+                {
+                    question: "What is a user persona?",
+                    options: [
+                        "A real customer who uses the product",
+                        "The CEO's vision for the product",
+                        "A fictional representation of your ideal customer",
+                        "A list of product features"
+                    ],
+                    correct: 2,
+                    explanation: "A user persona is a fictional but data-driven representation of your ideal customer, helping teams understand and empathize with users."
+                },
+                {
+                    question: "What does A/B testing help you determine?",
+                    options: [
+                        "Which version of a feature performs better",
+                        "The total number of users",
+                        "The development cost",
+                        "The server uptime"
+                    ],
+                    correct: 0,
+                    explanation: "A/B testing compares two versions of a feature or design to determine which performs better based on specific metrics."
+                },
+                {
+                    question: "What is the 'Jobs to be Done' framework?",
+                    options: [
+                        "A way to assign tasks to developers",
+                        "A framework for understanding why customers hire products",
+                        "A project management methodology",
+                        "A hiring process for PMs"
+                    ],
+                    correct: 1,
+                    explanation: "The 'Jobs to be Done' framework focuses on understanding what job customers are trying to accomplish when they 'hire' a product or service."
+                },
+                {
+                    question: "What is a product roadmap?",
+                    options: [
+                        "A map showing where users are located",
+                        "A visual representation of the product strategy over time",
+                        "The technical architecture diagram",
+                        "A list of competitors"
+                    ],
+                    correct: 1,
+                    explanation: "A product roadmap is a visual representation of the product strategy and planned features over time, aligning teams on priorities."
+                },
+                {
+                    question: "Which is NOT typically a PM's direct responsibility?",
+                    options: [
+                        "Setting product vision",
+                        "Writing production code",
+                        "Gathering user feedback",
+                        "Prioritizing features"
+                    ],
+                    correct: 1,
+                    explanation: "While PMs work closely with engineers, writing production code is not typically a direct PM responsibility. PMs focus on the 'what' and 'why,' not the 'how.'"
+                },
+                {
+                    question: "What is product-market fit?",
+                    options: [
+                        "When the product fits in the market share",
+                        "When the product satisfies a strong market demand",
+                        "When the market is saturated",
+                        "When competitors enter the market"
+                    ],
+                    correct: 1,
+                    explanation: "Product-market fit occurs when a product satisfies a strong market demand and customers are getting significant value from it."
+                },
+                {
+                    question: "What is the purpose of user story mapping?",
+                    options: [
+                        "To create a visual representation of the user journey",
+                        "To write stories about users",
+                        "To map server locations",
+                        "To track user locations"
+                    ],
+                    correct: 0,
+                    explanation: "User story mapping creates a visual representation of the user journey, helping teams understand the full experience and prioritize features."
+                },
+                {
+                    question: "What does KPI stand for?",
+                    options: [
+                        "Key Product Indicator",
+                        "Knowledge Process Integration",
+                        "Key Performance Indicator",
+                        "Keeping Products Innovative"
+                    ],
+                    correct: 2,
+                    explanation: "KPI stands for Key Performance Indicator - measurable values that demonstrate how effectively a company is achieving key objectives."
+                },
+                {
+                    question: "What is a sprint in Agile methodology?",
+                    options: [
+                        "A fast run to the finish",
+                        "A fixed time period for completing work",
+                        "A type of user test",
+                        "A competitive analysis"
+                    ],
+                    correct: 1,
+                    explanation: "A sprint is a fixed time period (usually 1-4 weeks) during which a team completes a set amount of work in Agile development."
+                },
+                {
+                    question: "What is the main purpose of a retrospective?",
+                    options: [
+                        "To blame team members for mistakes",
+                        "To plan the next sprint",
+                        "To reflect on what went well and what could improve",
+                        "To review code quality"
+                    ],
+                    correct: 2,
+                    explanation: "Retrospectives are meetings where teams reflect on what went well, what didn't, and how to improve their processes."
+                },
+                {
+                    question: "What is customer churn?",
+                    options: [
+                        "When customers are happy",
+                        "When customers stop using your product",
+                        "When customers buy more",
+                        "When customers refer friends"
+                    ],
+                    correct: 1,
+                    explanation: "Customer churn is the rate at which customers stop using your product or service over a given time period."
+                },
+                {
+                    question: "What is a wireframe?",
+                    options: [
+                        "A type of network cable",
+                        "A low-fidelity visual representation of a user interface",
+                        "A security feature",
+                        "A database schema"
+                    ],
+                    correct: 1,
+                    explanation: "A wireframe is a low-fidelity visual representation of a user interface, showing structure and functionality without detailed design."
+                },
+                {
+                    question: "What does ROI mean for a product feature?",
+                    options: [
+                        "Rules of Implementation",
+                        "Return on Investment",
+                        "Rate of Innovation",
+                        "Reach of Influence"
+                    ],
+                    correct: 1,
+                    explanation: "ROI (Return on Investment) measures the profitability of a feature by comparing its benefits to its costs."
+                },
+                {
+                    question: "What is a North Star Metric?",
+                    options: [
+                        "A metric pointing to the north",
+                        "The single metric that best captures the core value delivered to customers",
+                        "The number of stars in app reviews",
+                        "A navigation feature"
+                    ],
+                    correct: 1,
+                    explanation: "A North Star Metric is the single metric that best captures the core value your product delivers to customers."
+                },
+                {
+                    question: "What is the purpose of a competitive analysis?",
+                    options: [
+                        "To copy competitor features",
+                        "To understand market positioning and opportunities",
+                        "To hire competitor employees",
+                        "To reduce prices"
+                    ],
+                    correct: 1,
+                    explanation: "Competitive analysis helps understand market positioning, identify opportunities, and differentiate your product strategy."
+                },
+                {
+                    question: "What is feature creep?",
+                    options: [
+                        "When features move slowly",
+                        "When unnecessary features are continuously added",
+                        "When features are removed",
+                        "When features are tested"
+                    ],
+                    correct: 1,
+                    explanation: "Feature creep occurs when unnecessary features are continuously added to a product, often making it complex and unfocused."
+                },
+                {
+                    question: "What is the primary goal of user research?",
+                    options: [
+                        "To prove your assumptions are correct",
+                        "To understand user needs and behaviors",
+                        "To increase development speed",
+                        "To reduce costs"
+                    ],
+                    correct: 1,
+                    explanation: "User research aims to understand user needs, behaviors, and pain points to inform product decisions and improve user experience."
+                },
+                {
+                    question: "What does CAC stand for in product metrics?",
+                    options: [
+                        "Customer Acquisition Cost",
+                        "Customer Activity Count",
+                        "Competitive Advantage Classification",
+                        "Customer Acceptance Criteria"
+                    ],
+                    correct: 0,
+                    explanation: "CAC stands for Customer Acquisition Cost - the total cost of acquiring a new customer, including marketing and sales expenses."
+                },
+                {
+                    question: "What is the purpose of a product backlog?",
+                    options: [
+                        "To store old features",
+                        "To prioritize and manage product requirements",
+                        "To track bugs only",
+                        "To manage team performance"
+                    ],
+                    correct: 1,
+                    explanation: "A product backlog is a prioritized list of features, user stories, and requirements that serves as the single source of truth for what needs to be built."
+                },
+                {
+                    question: "What is a user story?",
+                    options: [
+                        "A biography of a user",
+                        "A short description of a feature from the user's perspective",
+                        "A case study about users",
+                        "A marketing story"
+                    ],
+                    correct: 1,
+                    explanation: "A user story is a short, simple description of a feature told from the perspective of the person who desires the new capability."
+                },
+                {
+                    question: "What is the difference between a feature and a benefit?",
+                    options: [
+                        "Features are technical, benefits are non-technical",
+                        "Features are what the product does, benefits are why users care",
+                        "Features are free, benefits cost money",
+                        "There is no difference"
+                    ],
+                    correct: 1,
+                    explanation: "Features describe what the product does (functionality), while benefits explain why users care and what value they get from those features."
+                }
+            ],
+            2: [
+                // Level 2: Case Studies & Complex Decisions
+                {
+                    question: "Your app has high user acquisition but low retention. What should be your first priority?",
+                    options: [
+                        "Increase marketing spend to get more users",
+                        "Focus on improving onboarding and early user experience",
+                        "Add more features to keep users engaged",
+                        "Reduce the app's price"
+                    ],
+                    correct: 1,
+                    explanation: "With high acquisition but low retention, the issue is likely in the early user experience. Focus on onboarding and helping users realize value quickly."
+                },
+                {
+                    question: "You discover that 60% of users drop off after the first screen. What's your next step?",
+                    options: [
+                        "Remove the first screen entirely",
+                        "Conduct user research to understand why users are dropping off",
+                        "Make the first screen more colorful",
+                        "Add more features to the first screen"
+                    ],
+                    correct: 1,
+                    explanation: "High drop-off rates require investigation. User research will help identify specific pain points and barriers in the first screen experience."
+                },
+                {
+                    question: "Your team wants to build 5 features but you can only build 2. How do you decide?",
+                    options: [
+                        "Choose the ones that are easiest to build",
+                        "Let the engineering team decide",
+                        "Use a prioritization framework considering impact and effort",
+                        "Build the ones requested by the loudest stakeholder"
+                    ],
+                    correct: 2,
+                    explanation: "Use a structured prioritization framework like RICE to objectively evaluate features based on reach, impact, confidence, and effort."
+                },
+                {
+                    question: "A major competitor just launched a feature your users are asking for. What do you do?",
+                    options: [
+                        "Immediately copy their feature exactly",
+                        "Ignore it and stick to your roadmap",
+                        "Analyze user needs and consider if/how to respond strategically",
+                        "Launch a marketing campaign against the competitor"
+                    ],
+                    correct: 2,
+                    explanation: "Evaluate the competitive feature strategically. Understand user needs, assess strategic fit, and decide whether to build something similar, better, or different."
+                },
+                {
+                    question: "Your product's key metric is declining. What's your first action?",
+                    options: [
+                        "Panic and implement quick fixes",
+                        "Investigate the root cause through data analysis",
+                        "Blame the engineering team",
+                        "Launch a new marketing campaign"
+                    ],
+                    correct: 1,
+                    explanation: "When key metrics decline, start with thorough investigation. Analyze data, user behavior, and potential causes before taking action."
+                },
+                {
+                    question: "You have limited engineering resources. How do you handle stakeholder requests?",
+                    options: [
+                        "Accept all requests to keep everyone happy",
+                        "Reject all requests to focus on the roadmap",
+                        "Evaluate requests against strategy and prioritize transparently",
+                        "Randomly select which requests to fulfill"
+                    ],
+                    correct: 2,
+                    explanation: "Manage stakeholder requests by evaluating them against product strategy, communicating priorities transparently, and explaining trade-offs."
+                },
+                {
+                    question: "Users are requesting a feature that doesn't align with your product vision. What do you do?",
+                    options: [
+                        "Build it immediately since users want it",
+                        "Ignore the request completely",
+                        "Understand the underlying need and explore alternative solutions",
+                        "Tell users they're wrong about what they need"
+                    ],
+                    correct: 2,
+                    explanation: "Dig deeper into the user need behind the request. There might be alternative solutions that address the need while aligning with your vision."
+                },
+                {
+                    question: "Your A/B test results show no significant difference. What's your next step?",
+                    options: [
+                        "Choose the version you personally prefer",
+                        "Run the test longer or try a more significant variation",
+                        "Implement both versions",
+                        "Abandon the feature entirely"
+                    ],
+                    correct: 1,
+                    explanation: "No significant difference might mean the change isn't impactful enough. Consider running longer, testing more significant variations, or re-evaluating the hypothesis."
+                },
+                {
+                    question: "How do you handle conflicting feedback from different user segments?",
+                    options: [
+                        "Ignore minority segments",
+                        "Try to please everyone with a compromise solution",
+                        "Prioritize based on strategic value and business impact",
+                        "Build separate products for each segment"
+                    ],
+                    correct: 2,
+                    explanation: "Conflicting feedback requires strategic prioritization. Consider which segments are most valuable to your business and product strategy."
+                },
+                {
+                    question: "Your CEO wants to add a feature that users haven't requested. How do you respond?",
+                    options: [
+                        "Immediately build it without question",
+                        "Refuse and ignore the request",
+                        "Discuss the rationale and suggest validation approaches",
+                        "Build it but hide it from users"
+                    ],
+                    correct: 2,
+                    explanation: "Engage in constructive dialogue. Understand the CEO's rationale and suggest ways to validate the idea before committing resources."
+                },
+                {
+                    question: "You notice users are using your product in an unexpected way. What do you do?",
+                    options: [
+                        "Force them to use it the intended way",
+                        "Ignore this behavior",
+                        "Study this usage pattern and consider product implications",
+                        "Remove the functionality they're misusing"
+                    ],
+                    correct: 2,
+                    explanation: "Unexpected usage patterns can reveal new opportunities or unmet needs. Study these behaviors to understand potential product improvements."
+                },
+                {
+                    question: "Your product launch missed key metrics. How do you proceed?",
+                    options: [
+                        "Blame external factors and move on",
+                        "Conduct a post-mortem to identify lessons learned",
+                        "Immediately launch another feature",
+                        "Revert all changes"
+                    ],
+                    correct: 1,
+                    explanation: "Failed launches are learning opportunities. Conduct thorough post-mortems to understand what went wrong and how to improve future launches."
+                },
+                {
+                    question: "How do you balance user feedback with data insights when they conflict?",
+                    options: [
+                        "Always trust the data over user feedback",
+                        "Always trust user feedback over data",
+                        "Investigate deeper to understand the discrepancy",
+                        "Ignore both and follow your intuition"
+                    ],
+                    correct: 2,
+                    explanation: "Conflicting data and feedback require deeper investigation. Both sources have value, and understanding the discrepancy often reveals important insights."
+                },
+                {
+                    question: "Your team is consistently missing sprint commitments. What's your approach?",
+                    options: [
+                        "Demand the team work longer hours",
+                        "Reduce the scope of future sprints",
+                        "Investigate root causes and improve estimation/planning",
+                        "Replace team members"
+                    ],
+                    correct: 2,
+                    explanation: "Consistent missed commitments indicate systemic issues. Investigate root causes like poor estimation, unclear requirements, or technical debt."
+                },
+                {
+                    question: "A key stakeholder disagrees with your prioritization. How do you handle it?",
+                    options: [
+                        "Change your prioritization to appease them",
+                        "Ignore their concerns",
+                        "Present your reasoning and seek to understand their perspective",
+                        "Escalate to their manager"
+                    ],
+                    correct: 2,
+                    explanation: "Stakeholder disagreements require open dialogue. Present your reasoning clearly and seek to understand their concerns to find common ground."
+                },
+                {
+                    question: "You discover a critical bug after launch. What's your immediate response?",
+                    options: [
+                        "Wait for user complaints before acting",
+                        "Assess impact and develop a response plan",
+                        "Immediately revert the entire release",
+                        "Hope users don't notice"
+                    ],
+                    correct: 1,
+                    explanation: "Critical bugs require immediate assessment of impact, user communication, and a clear response plan including fixes and prevention measures."
+                },
+                {
+                    question: "Your product is successful but team morale is low. What do you address first?",
+                    options: [
+                        "Focus only on product success",
+                        "Address team concerns and work environment issues",
+                        "Hire new team members",
+                        "Increase everyone's workload"
+                    ],
+                    correct: 1,
+                    explanation: "Low team morale can undermine long-term success. Address team concerns, improve work environment, and ensure sustainable practices."
+                },
+                {
+                    question: "How do you handle feature requests from your biggest customer?",
+                    options: [
+                        "Immediately prioritize all their requests",
+                        "Ignore them like any other customer",
+                        "Evaluate requests against overall product strategy",
+                        "Build custom solutions just for them"
+                    ],
+                    correct: 2,
+                    explanation: "Even big customers' requests should be evaluated against overall product strategy. Consider impact on other users and long-term product direction."
+                },
+                {
+                    question: "Your user research contradicts your initial assumptions. What do you do?",
+                    options: [
+                        "Ignore the research and stick to your assumptions",
+                        "Adapt your approach based on the research findings",
+                        "Conduct more research to confirm your assumptions",
+                        "Question the research methodology"
+                    ],
+                    correct: 1,
+                    explanation: "Good product management means adapting to new information. Use research findings to refine your understanding and adjust your approach."
+                },
+                {
+                    question: "You need to sunset an underperforming feature. How do you approach this?",
+                    options: [
+                        "Remove it immediately without notice",
+                        "Keep it forever to avoid user complaints",
+                        "Communicate with users and provide migration options",
+                        "Hide the feature but keep it functional"
+                    ],
+                    correct: 2,
+                    explanation: "Sunsetting features requires careful communication, user migration support, and clear timelines to minimize disruption and maintain trust."
+                }
+            ],
+            3: [
+                // Level 3: AI/ML PM & Advanced Strategy
+                {
+                    question: "When building an AI-powered feature, what's your first consideration?",
+                    options: [
+                        "Which AI model to use",
+                        "The user problem you're solving",
+                        "Available training data",
+                        "Computing resources needed"
+                    ],
+                    correct: 1,
+                    explanation: "Always start with the user problem. AI should solve real user needs, not be implemented for its own sake."
+                },
+                {
+                    question: "Your ML model shows high accuracy in testing but poor performance in production. What's likely wrong?",
+                    options: [
+                        "The model is too complex",
+                        "Training data doesn't represent real-world usage",
+                        "The model needs more features",
+                        "The accuracy metric is wrong"
+                    ],
+                    correct: 1,
+                    explanation: "Poor production performance despite good test accuracy usually indicates training/real-world data mismatch or distribution shift."
+                },
+                {
+                    question: "How do you measure success for an AI recommendation system?",
+                    options: [
+                        "Model accuracy only",
+                        "User engagement and business metrics",
+                        "Number of recommendations shown",
+                        "Speed of recommendations"
+                    ],
+                    correct: 1,
+                    explanation: "Success should be measured by user engagement, conversion rates, and business impact, not just technical metrics."
+                },
+                {
+                    question: "Users complain your AI feature is biased. What's your immediate response?",
+                    options: [
+                        "Explain that all AI has some bias",
+                        "Investigate the bias claims and audit your data/model",
+                        "Disable the feature immediately",
+                        "Ignore the complaints"
+                    ],
+                    correct: 1,
+                    explanation: "Bias complaints require immediate investigation. Audit your training data, model outputs, and implement bias detection/mitigation measures."
+                },
+                {
+                    question: "When should you choose a simple rule-based system over ML?",
+                    options: [
+                        "Never, ML is always better",
+                        "When the problem is well-defined with clear rules",
+                        "When you don't have data scientists",
+                        "When users don't expect intelligence"
+                    ],
+                    correct: 1,
+                    explanation: "Simple problems with clear rules often don't need ML complexity. Start simple and add ML when the complexity is justified."
+                },
+                {
+                    question: "Your AI feature needs continuous learning. What's a key PM consideration?",
+                    options: [
+                        "Model architecture optimization",
+                        "User feedback loops and data quality monitoring",
+                        "Server capacity planning",
+                        "Algorithm selection"
+                    ],
+                    correct: 1,
+                    explanation: "Continuous learning requires robust feedback loops, data quality monitoring, and systems to detect and prevent model degradation."
+                },
+                {
+                    question: "How do you handle explainability in AI product decisions?",
+                    options: [
+                        "Ignore explainability to focus on performance",
+                        "Balance explainability needs with model performance",
+                        "Only use explainable models",
+                        "Let engineers decide"
+                    ],
+                    correct: 1,
+                    explanation: "Balance explainability with performance based on use case. High-stakes decisions need more explainability than recommendation systems."
+                },
+                {
+                    question: "Your AI model's performance is degrading over time. What's your approach?",
+                    options: [
+                        "Retrain with the same data",
+                        "Investigate data drift and model decay",
+                        "Switch to a different algorithm",
+                        "Increase model complexity"
+                    ],
+                    correct: 1,
+                    explanation: "Performance degradation often indicates data drift, where real-world data changes from training data. Monitor and address these shifts."
+                },
+                {
+                    question: "When launching an AI feature, what's crucial for user adoption?",
+                    options: [
+                        "Highest possible accuracy",
+                        "Clear value proposition and user education",
+                        "Fastest response time",
+                        "Most advanced algorithms"
+                    ],
+                    correct: 1,
+                    explanation: "User adoption depends on clear value and understanding. Users need to understand what the AI does and why it's valuable."
+                },
+                {
+                    question: "How do you prioritize AI/ML initiatives in your roadmap?",
+                    options: [
+                        "By technical complexity",
+                        "By available data quality",
+                        "By user impact and business value",
+                        "By team expertise"
+                    ],
+                    correct: 2,
+                    explanation: "Prioritize AI initiatives like any other feature - by user impact and business value, not just technical possibilities."
+                },
+                {
+                    question: "Your recommendation algorithm is creating filter bubbles. How do you address this?",
+                    options: [
+                        "Ignore it, users like personalized content",
+                        "Introduce diversity and exploration mechanisms",
+                        "Remove personalization entirely",
+                        "Let users figure it out themselves"
+                    ],
+                    correct: 1,
+                    explanation: "Filter bubbles can limit user discovery. Introduce diversity, exploration, and serendipity mechanisms to balance personalization."
+                },
+                {
+                    question: "What's a key challenge in AI product management vs traditional products?",
+                    options: [
+                        "AI requires no user research",
+                        "AI products have uncertain and evolving capabilities",
+                        "AI eliminates the need for prioritization",
+                        "AI products don't need user feedback"
+                    ],
+                    correct: 1,
+                    explanation: "AI capabilities are often uncertain and evolve as you gather data. This requires different planning and expectation management approaches."
+                },
+                {
+                    question: "How do you handle user privacy in AI products?",
+                    options: [
+                        "Collect all possible data for better models",
+                        "Implement privacy-by-design principles",
+                        "Only worry about privacy if users complain",
+                        "Use anonymization and call it solved"
+                    ],
+                    correct: 1,
+                    explanation: "Privacy should be built in from the start with techniques like differential privacy, federated learning, and minimal data collection."
+                },
+                {
+                    question: "Your AI feature occasionally makes embarrassing mistakes. How do you handle this?",
+                    options: [
+                        "Hide the feature until perfect",
+                        "Implement graceful error handling and user feedback mechanisms",
+                        "Ignore occasional mistakes",
+                        "Blame the users for misusing it"
+                    ],
+                    correct: 1,
+                    explanation: "AI mistakes are inevitable. Build systems for graceful error handling, user feedback, and continuous improvement."
+                },
+                {
+                    question: "When building conversational AI, what's most important for user experience?",
+                    options: [
+                        "Natural language processing accuracy",
+                        "Setting clear expectations and handling failures gracefully",
+                        "Responding to every possible query",
+                        "Making it sound human-like"
+                    ],
+                    correct: 1,
+                    explanation: "User experience depends more on clear expectations and graceful failure handling than perfect NLP capabilities."
+                },
+                {
+                    question: "How do you validate AI product ideas before development?",
+                    options: [
+                        "Build a prototype and test accuracy",
+                        "Use Wizard of Oz testing with human simulation",
+                        "Survey users about AI preferences",
+                        "Analyze competitor AI features"
+                    ],
+                    correct: 1,
+                    explanation: "Wizard of Oz testing lets you validate user experience and value proposition before investing in complex AI development."
+                },
+                {
+                    question: "Your AI feature works well for some users but poorly for others. What's your approach?",
+                    options: [
+                        "Focus on the users it works well for",
+                        "Investigate demographic or usage pattern differences",
+                        "Remove the feature entirely",
+                        "Average out the performance differences"
+                    ],
+                    correct: 1,
+                    explanation: "Uneven performance often indicates bias or missing representation in training data. Investigate and address these disparities."
+                },
+                {
+                    question: "What's the role of human oversight in AI product features?",
+                    options: [
+                        "Eliminate human involvement for efficiency",
+                        "Maintain human-in-the-loop for critical decisions",
+                        "Only use humans for training data",
+                        "Humans should only fix bugs"
+                    ],
+                    correct: 1,
+                    explanation: "Human oversight is crucial for AI systems, especially for high-stakes decisions, quality control, and handling edge cases."
+                },
+                {
+                    question: "How do you communicate AI capabilities to stakeholders?",
+                    options: [
+                        "Focus on technical details and accuracy metrics",
+                        "Emphasize business value and user impact",
+                        "Promise perfect AI performance",
+                        "Avoid discussing limitations"
+                    ],
+                    correct: 1,
+                    explanation: "Communicate AI value in business terms while being transparent about limitations and setting realistic expectations."
+                },
+                {
+                    question: "Your AI model requires significant computational resources. How do you justify the cost?",
+                    options: [
+                        "Implement regardless of cost",
+                        "Calculate ROI based on user value and business impact",
+                        "Use the cheapest possible model",
+                        "Wait for computing costs to decrease"
+                    ],
+                    correct: 1,
+                    explanation: "Justify AI costs like any other investment - by demonstrating clear ROI through user value and business impact."
+                }
+            ],
+            4: [
+                // Level 4: PM Excellence & Expert Scenarios
+                {
+                    question: "As a senior PM, you're asked to enter a saturated market. What's your strategic approach?",
+                    options: [
+                        "Compete on price alone",
+                        "Copy existing successful products",
+                        "Find underserved segments or create new value propositions",
+                        "Focus on superior marketing"
+                    ],
+                    correct: 2,
+                    explanation: "In saturated markets, success comes from finding underserved segments, creating differentiated value propositions, or changing the game entirely."
+                },
+                {
+                    question: "Your company is considering platform strategy. What's the key success factor?",
+                    options: [
+                        "Technical architecture quality",
+                        "Network effects and ecosystem value",
+                        "First-mover advantage",
+                        "Venture capital funding"
+                    ],
+                    correct: 1,
+                    explanation: "Successful platforms create network effects where value increases with more participants, building sustainable competitive advantages."
+                },
+                {
+                    question: "You're managing a product with multiple stakeholder groups with conflicting needs. How do you proceed?",
+                    options: [
+                        "Please the loudest stakeholder",
+                        "Try to satisfy everyone equally",
+                        "Develop a stakeholder hierarchy based on strategic value",
+                        "Ignore stakeholder conflicts"
+                    ],
+                    correct: 2,
+                    explanation: "Create a clear stakeholder hierarchy based on strategic value, business impact, and long-term success rather than trying to please everyone."
+                },
+                {
+                    question: "Your product team is scaling rapidly. What's your biggest organizational challenge?",
+                    options: [
+                        "Hiring enough engineers",
+                        "Maintaining product vision alignment and decision-making clarity",
+                        "Securing more budget",
+                        "Implementing new tools"
+                    ],
+                    correct: 1,
+                    explanation: "Scaling teams struggle most with maintaining alignment, clear decision-making processes, and consistent product vision execution."
+                },
+                {
+                    question: "You discover your product is cannibalizing another company product. How do you handle this?",
+                    options: [
+                        "Immediately stop development",
+                        "Ignore the cannibalization",
+                        "Analyze overall portfolio impact and strategic value",
+                        "Focus on the more profitable product"
+                    ],
+                    correct: 2,
+                    explanation: "Cannibalization requires portfolio-level analysis. Sometimes it's strategic to cannibalize your own products to prevent competitor disruption."
+                },
+                {
+                    question: "Your CEO wants to pivot the entire product strategy. What's your approach?",
+                    options: [
+                        "Immediately implement the pivot",
+                        "Resist any changes to maintain stability",
+                        "Evaluate the rationale and propose a structured transition plan",
+                        "Escalate to the board"
+                    ],
+                    correct: 2,
+                    explanation: "Major pivots require careful evaluation of rationale, impact assessment, and structured transition planning to minimize disruption."
+                },
+                {
+                    question: "You're launching in a new geography with different user behaviors. What's your strategy?",
+                    options: [
+                        "Use the same product without changes",
+                        "Conduct local market research and adapt accordingly",
+                        "Hire local staff and let them decide",
+                        "Focus on marketing translation only"
+                    ],
+                    correct: 1,
+                    explanation: "New geographies often require product adaptations based on local user behaviors, regulations, and market conditions."
+                },
+                {
+                    question: "Your product metrics show success but customer satisfaction is declining. What's your focus?",
+                    options: [
+                        "Ignore satisfaction and focus on metrics",
+                        "Investigate the disconnect between metrics and satisfaction",
+                        "Change your metrics to match satisfaction",
+                        "Improve marketing to manage expectations"
+                    ],
+                    correct: 1,
+                    explanation: "Disconnects between metrics and satisfaction often indicate you're measuring the wrong things or missing important aspects of user experience."
+                },
+                {
+                    question: "You need to sunset a major product line. How do you manage this transition?",
+                    options: [
+                        "Announce immediately and shut down quickly",
+                        "Quietly reduce investment and let it fade",
+                        "Develop a comprehensive transition plan with customer migration",
+                        "Sell the product to competitors"
+                    ],
+                    correct: 2,
+                    explanation: "Major product sunsets require comprehensive planning including customer communication, migration paths, and timeline management."
+                },
+                {
+                    question: "Your product needs to achieve enterprise-level compliance. What's your PM priority?",
+                    options: [
+                        "Delegate entirely to legal and security teams",
+                        "Understand compliance requirements and their product implications",
+                        "Focus on features and ignore compliance",
+                        "Hire compliance consultants"
+                    ],
+                    correct: 1,
+                    explanation: "PMs must understand compliance requirements and their product implications to make informed decisions about features, timelines, and trade-offs."
+                },
+                {
+                    question: "You're managing a product with network effects. What's your biggest challenge?",
+                    options: [
+                        "Technical scalability",
+                        "Reaching critical mass and managing growth dynamics",
+                        "Feature development speed",
+                        "Competitor analysis"
+                    ],
+                    correct: 1,
+                    explanation: "Network effect products face the challenge of reaching critical mass while managing growth dynamics and preventing negative network effects."
+                },
+                {
+                    question: "Your product strategy conflicts with short-term revenue goals. How do you handle this?",
+                    options: [
+                        "Always prioritize short-term revenue",
+                        "Ignore revenue concerns",
+                        "Find creative solutions that balance both needs",
+                        "Escalate to executives for decision"
+                    ],
+                    correct: 2,
+                    explanation: "Look for creative solutions that advance long-term strategy while addressing short-term needs, or clearly communicate trade-offs to leadership."
+                },
+                {
+                    question: "You're building a two-sided marketplace. What's your key strategic consideration?",
+                    options: [
+                        "Focus on supply side first",
+                        "Focus on demand side first",
+                        "Balance both sides and solve the chicken-egg problem",
+                        "Focus on technology platform"
+                    ],
+                    correct: 2,
+                    explanation: "Two-sided marketplaces require careful balance and strategies to solve the chicken-and-egg problem of needing both supply and demand."
+                },
+                {
+                    question: "Your product is becoming a commodity. How do you respond strategically?",
+                    options: [
+                        "Compete solely on price",
+                        "Add more features to differentiate",
+                        "Move up the value chain or find new differentiation",
+                        "Exit the market"
+                    ],
+                    correct: 2,
+                    explanation: "When facing commoditization, look for ways to move up the value chain, create new differentiation, or transform the business model."
+                },
+                {
+                    question: "You need to build API products for developers. What's your unique PM consideration?",
+                    options: [
+                        "Focus on comprehensive documentation",
+                        "Treat developers as users and optimize for developer experience",
+                        "Provide unlimited free usage",
+                        "Copy existing API designs"
+                    ],
+                    correct: 1,
+                    explanation: "API products require treating developers as users, optimizing for developer experience, and understanding developer workflows and pain points."
+                },
+                {
+                    question: "Your product needs to support both B2B and B2C use cases. What's your approach?",
+                    options: [
+                        "Build separate products for each",
+                        "Focus on one and ignore the other",
+                        "Design a flexible architecture that serves both",
+                        "Randomly alternate between focusing on each"
+                    ],
+                    correct: 2,
+                    explanation: "Products serving both B2B and B2C need flexible architecture and design that can accommodate different user needs and business models."
+                },
+                {
+                    question: "You're managing technical debt that's slowing feature development. How do you address this?",
+                    options: [
+                        "Ignore technical debt and focus on features",
+                        "Stop all feature development to fix technical debt",
+                        "Balance debt reduction with feature development",
+                        "Rewrite everything from scratch"
+                    ],
+                    correct: 2,
+                    explanation: "Technical debt requires ongoing balance between paying down debt and delivering features, with clear communication about trade-offs."
+                },
+                {
+                    question: "Your product needs to scale globally. What's your biggest PM challenge?",
+                    options: [
+                        "Language translation",
+                        "Managing cultural differences and local regulations",
+                        "Time zone coordination",
+                        "Currency conversion"
+                    ],
+                    correct: 1,
+                    explanation: "Global scaling requires managing diverse cultural expectations, local regulations, and varying user behaviors across markets."
+                },
+                {
+                    question: "You're leading product innovation in a traditional industry. What's your strategy?",
+                    options: [
+                        "Disrupt everything immediately",
+                        "Understand industry constraints and find innovation opportunities",
+                        "Copy digital-first companies",
+                        "Focus on incremental improvements only"
+                    ],
+                    correct: 1,
+                    explanation: "Innovation in traditional industries requires understanding existing constraints, relationships, and finding opportunities within industry realities."
+                },
+                {
+                    question: "Your product team is distributed across multiple time zones. What's your key management focus?",
+                    options: [
+                        "Require everyone to work the same hours",
+                        "Establish clear communication protocols and asynchronous workflows",
+                        "Hire only in one time zone",
+                        "Use only synchronous communication"
+                    ],
+                    correct: 1,
+                    explanation: "Distributed teams require clear communication protocols, asynchronous workflows, and systems that work across time zones and cultures."
+                }
+            ]
+        };
+
+        const badges = [
+            { id: 'rookie', name: 'PM Rookie', icon: '🌱', requirement: 'Complete Level 1' },
+            { id: 'strategist', name: 'Strategy Master', icon: '🎯', requirement: 'Complete Level 2' },
+            { id: 'analyst', name: 'Data Wizard', icon: '📊', requirement: 'Complete Level 3' },
+            { id: 'expert', name: 'PM Expert', icon: '🏆', requirement: 'Complete Level 4' },
+            { id: 'perfect', name: 'Perfectionist', icon: '💯', requirement: 'Score 100% on any level' },
+            { id: 'speedster', name: 'Speed Demon', icon: '⚡', requirement: 'Complete a level with 50% time remaining' },
+            { id: 'survivor', name: 'Survivor', icon: '🛡️', requirement: 'Complete a level without losing lives' },
+            { id: 'master', name: 'Interview Master', icon: '👑', requirement: 'Complete all levels' }
+        ];
+
+        // Core Functions
+        function shuffleArray(array) {
+            // Create a copy to avoid modifying the original
+            const newArray = [...array];
+            
+            // Fisher-Yates shuffle algorithm for true randomness
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            
+            return newArray;
+        }
+
+        // Enhanced shuffle with timestamp seed for better randomness
+        function getRandomQuestionSet(questions, count = 20) {
+            // Add timestamp-based randomness
+            const timeBasedSeed = Date.now() % 1000;
+            
+            // Multiple shuffle passes for extra randomness
+            let shuffled = [...questions];
+            for (let pass = 0; pass < 3; pass++) {
+                shuffled = shuffleArray(shuffled);
+            }
+            
+            // Take the requested number of questions
+            const selectedQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+            
+            console.log('Random seed factor:', timeBasedSeed);
+            console.log('Questions after shuffling:', selectedQuestions.length);
+            
+            return selectedQuestions;
+        }
+
+        function startLevel(level) {
+            if (!gameState.unlockedLevels.includes(level)) {
+                return;
+            }
+            
+            gameState.currentLevel = level;
+            gameState.currentQuestion = 0;
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.correctAnswers = 0;
+            gameState.powerups = { freeze: 1, fifty: 2, skip: 1 };
+            
+            // Get questions for this specific level
+            const levelQuestions = questions[level];
+            if (!levelQuestions) {
+                alert('Questions for this level are not yet available!');
+                return;
+            }
+            
+            // Shuffle questions and take exactly 20 (or all if less than 20)
+            const shuffled = shuffleArray(levelQuestions);
+            gameState.currentQuestionSet = shuffled.slice(0, 20);
+            
+            // Reset powerup buttons
+            document.querySelectorAll('.powerup').forEach(p => p.classList.remove('used'));
+            
+            showScreen('game');
+            document.querySelector('.powerup-container').style.display = 'flex';
+            loadQuestion();
+        }
+
+        function showScreen(screenName) {
+            console.log('showScreen called with:', screenName);
+            
+            // Hide all screens
+            const screens = document.querySelectorAll('.menu-screen, .game-screen, .result-screen, .badges-screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            console.log('All screens hidden');
+            
+            // Show the requested screen
+            const targetScreen = document.querySelector(`.${screenName}-screen`);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                console.log(`${screenName} screen is now active`);
+            } else {
+                console.error(`Screen not found: ${screenName}-screen`);
+            }
+        }
+
+        function loadQuestion() {
+            const question = gameState.currentQuestionSet[gameState.currentQuestion];
+            if (!question) {
+                endLevel(true);
+                return;
+            }
+            
+            document.querySelector('.question-number').textContent = `Question ${gameState.currentQuestion + 1}/20`;
+            document.querySelector('#question-text').textContent = question.question;
+            
+            const optionsContainer = document.querySelector('#options-container');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => selectOption(index);
+                optionDiv.dataset.index = index;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            document.querySelector('#explanation').style.display = 'none';
+            document.querySelector('#next-btn').disabled = true;
+            gameState.selectedOption = null;
+            
+            // Setup navigation buttons with event listeners
+            setupNavigationButtons();
+            
+            // Reset timer
+            gameState.timeLeft = 30;
+            document.querySelector('#timer').textContent = gameState.timeLeft;
+            document.querySelector('.timer').classList.remove('warning');
+            
+            // Start timer
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+            
+            // Update progress bar
+            const progress = ((gameState.currentQuestion + 1) / 20) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            // Update score
+            document.querySelector('#score').textContent = gameState.score;
+            
+            // Update lives
+            updateLives();
+        }
+
+        function setupNavigationButtons() {
+            // Setup back button
+            const backButton = document.getElementById('back-button');
+            if (backButton) {
+                backButton.onclick = function() {
+                    console.log('Back button clicked');
+                    confirmQuit();
+                };
+                console.log('Back button event listener attached');
+            }
+            
+            // Setup restart button
+            const restartButton = document.getElementById('restart-button');
+            if (restartButton) {
+                restartButton.onclick = function() {
+                    console.log('Restart button clicked');
+                    confirmRestart();
+                };
+                console.log('Restart button event listener attached');
+            }
+            
+            // Setup next button
+            const nextButton = document.getElementById('next-btn');
+            if (nextButton) {
+                nextButton.onclick = function() {
+                    console.log('Next button clicked');
+                    nextQuestion();
+                };
+                console.log('Next button event listener attached');
+            }
+        }
+
+        function updateTimer() {
+            gameState.timeLeft--;
+            document.querySelector('#timer').textContent = gameState.timeLeft;
+            
+            if (gameState.timeLeft <= 10) {
+                document.querySelector('.timer').classList.add('warning');
+            }
+            
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameState.timerInterval);
+                selectOption(-1); // Time's up - this is treated as a wrong answer, not game over
+            }
+        }
+
+        function selectOption(index) {
+            if (gameState.selectedOption !== null) return;
+            
+            gameState.selectedOption = index;
+            clearInterval(gameState.timerInterval);
+            
+            const question = gameState.currentQuestionSet[gameState.currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            if (index >= 0) {
+                options[index].classList.add('selected');
+            }
+            
+            // Show correct answer
+            setTimeout(() => {
+                options[question.correct].classList.add('correct');
+                
+                if (index !== question.correct) {
+                    if (index >= 0) {
+                        options[index].classList.add('incorrect');
+                    }
+                    // Wrong answer or time out - lose a life
+                    gameState.lives--;
+                    updateLives();
+                    
+                    // Only end the game if no lives left AND we're not at the last question
+                    if (gameState.lives <= 0) {
+                        // Show explanation first, then end after a delay
+                        document.querySelector('#explanation').style.display = 'block';
+                        document.querySelector('#explanation-text').textContent = question.explanation;
+                        
+                        setTimeout(() => {
+                            endLevel(false); // Game over due to no lives
+                        }, 3000); // Give time to read explanation
+                        return;
+                    }
+                } else {
+                    // Correct answer
+                    gameState.correctAnswers++;
+                    const timeBonus = Math.max(0, gameState.timeLeft * 5);
+                    gameState.score += 100 + timeBonus;
+                    document.querySelector('#score').textContent = gameState.score;
+                }
+                
+                // Show explanation
+                document.querySelector('#explanation').style.display = 'block';
+                document.querySelector('#explanation-text').textContent = question.explanation;
+                
+                // Enable next button (unless game is over due to no lives)
+                if (gameState.lives > 0) {
+                    document.querySelector('#next-btn').disabled = false;
+                }
+            }, 500);
+        }
+
+        function updateLives() {
+            const hearts = document.querySelectorAll('.heart');
+            hearts.forEach((heart, index) => {
+                if (index >= gameState.lives) {
+                    heart.classList.add('lost');
+                } else {
+                    heart.classList.remove('lost');
+                }
+            });
+        }
+
+        function endLevel(completed) {
+            clearInterval(gameState.timerInterval);
+            document.querySelector('.powerup-container').style.display = 'none';
+            
+            const totalQuestions = gameState.currentQuestionSet.length;
+            const accuracy = Math.round((gameState.correctAnswers / totalQuestions) * 100);
+            const timeBonus = gameState.score - (gameState.correctAnswers * 100);
+            
+            // Check if player passed (at least 50% correct)
+            const passingScore = Math.ceil(totalQuestions * 0.5);
+            const passed = gameState.correctAnswers >= passingScore;
+            
+            document.querySelector('#final-score').textContent = gameState.score;
+            document.querySelector('#correct-answers').textContent = `${gameState.correctAnswers}/${totalQuestions}`;
+            document.querySelector('#time-bonus').textContent = `+${timeBonus}`;
+            document.querySelector('#accuracy').textContent = `${accuracy}%`;
+            
+            // Update the result screen title
+            const resultTitle = document.querySelector('.result-screen h2');
+            if (passed) {
+                resultTitle.textContent = 'Level Complete! 🎉';
+                resultTitle.style.color = '#667eea';
+            } else {
+                resultTitle.textContent = 'Try Again! 💪';
+                resultTitle.style.color = '#f44336';
+            }
+            
+            // Award badges and unlock next level if passed
+            if (passed && completed) {
+                // Award level completion badge
+                const levelBadges = ['rookie', 'strategist', 'analyst', 'expert'];
+                if (levelBadges[gameState.currentLevel - 1] && !gameState.earnedBadges.includes(levelBadges[gameState.currentLevel - 1])) {
+                    gameState.earnedBadges.push(levelBadges[gameState.currentLevel - 1]);
+                }
+                
+                // Check for perfectionist badge
+                if (accuracy === 100 && !gameState.earnedBadges.includes('perfect')) {
+                    gameState.earnedBadges.push('perfect');
+                }
+                
+                // Check for survivor badge
+                if (gameState.lives === 3 && !gameState.earnedBadges.includes('survivor')) {
+                    gameState.earnedBadges.push('survivor');
+                }
+                
+                // Check for master badge
+                if (gameState.currentLevel === 4 && !gameState.earnedBadges.includes('master')) {
+                    gameState.earnedBadges.push('master');
+                }
+                
+                // Unlock next level
+                const nextLevel = gameState.currentLevel + 1;
+                if (nextLevel <= 4) {
+                    console.log(`Unlocking next level: ${nextLevel}`);
+                    unlockLevel(nextLevel);
+                }
+            }
+            
+            // Display result
+            const badgeContainer = document.querySelector('#earned-badge');
+            if (passed) {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em;">⭐</div>
+                        <h3 style="margin-top: 10px; color: #667eea;">Level Passed!</h3>
+                        <p style="color: #666;">You scored ${gameState.correctAnswers}/${totalQuestions} correct!</p>
+                    </div>
+                `;
+            } else {
+                badgeContainer.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 5em;">💪</div>
+                        <h3 style="margin-top: 10px; color: #f44336;">Keep Trying!</h3>
+                        <p style="color: #666;">You need ${passingScore - gameState.correctAnswers} more correct answers to pass!</p>
+                    </div>
+                `;
+            }
+            
+            showScreen('result');
+        }
+
+        function usePowerup(type) {
+            if (gameState.selectedOption !== null) return;
+            
+            switch(type) {
+                case 'freeze':
+                    if (gameState.powerups.freeze > 0) {
+                        gameState.powerups.freeze--;
+                        clearInterval(gameState.timerInterval);
+                        document.querySelector('#freeze-time').classList.add('used');
+                    }
+                    break;
+                case 'fifty':
+                    if (gameState.powerups.fifty > 0) {
+                        gameState.powerups.fifty--;
+                        const question = gameState.currentQuestionSet[gameState.currentQuestion];
+                        const incorrectOptions = [];
+                        
+                        for (let i = 0; i < 4; i++) {
+                            if (i !== question.correct) {
+                                incorrectOptions.push(i);
+                            }
+                        }
+                        
+                        // Remove 2 random incorrect options
+                        for (let i = 0; i < 2; i++) {
+                            const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
+                            const optionToRemove = incorrectOptions[randomIndex];
+                            document.querySelector(`.option[data-index="${optionToRemove}"]`).style.opacity = '0.3';
+                            document.querySelector(`.option[data-index="${optionToRemove}"]`).style.pointerEvents = 'none';
+                            incorrectOptions.splice(randomIndex, 1);
+                        }
+                        
+                        if (gameState.powerups.fifty === 0) {
+                            document.querySelector('#fifty-fifty').classList.add('used');
+                        }
+                    }
+                    break;
+                case 'skip':
+                    if (gameState.powerups.skip > 0) {
+                        gameState.powerups.skip--;
+                        document.querySelector('#skip').classList.add('used');
+                        nextQuestion();
+                    }
+                    break;
+            }
+        }
+
+        function backToMenu() {
+            showScreen('menu');
+            updateMenuDisplay();
+        }
+
+        function retryLevel() {
+            startLevel(gameState.currentLevel);
+        }
+
+        function showBadges() {
+            const badgesGrid = document.querySelector('#badges-grid');
+            badgesGrid.innerHTML = '';
+            
+            badges.forEach(badge => {
+                const earned = gameState.earnedBadges.includes(badge.id);
+                const badgeDiv = document.createElement('div');
+                badgeDiv.className = `badge-item ${earned ? 'earned' : ''}`;
+                badgeDiv.innerHTML = `
+                    <div class="badge-icon">${earned ? badge.icon : '🔒'}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">${badge.requirement}</div>
+                `;
+                badgesGrid.appendChild(badgeDiv);
+            });
+            
+            showScreen('badges');
+        }
+
+        function showLockedMessage() {
+            alert('Complete the previous level to unlock this one!');
+        }
+
+        function updateMenuDisplay() {
+            const levelCards = document.querySelectorAll('.level-card');
+            levelCards.forEach((card, index) => {
+                const levelNumber = index + 1;
+                if (gameState.unlockedLevels.includes(levelNumber)) {
+                    card.classList.remove('locked');
+                    card.onclick = () => startLevel(levelNumber);
+                } else {
+                    card.classList.add('locked');
+                    card.onclick = showLockedMessage;
+                }
+            });
+        }
+
+        function saveProgress() {
+            try {
+                const progress = {
+                    unlockedLevels: gameState.unlockedLevels,
+                    earnedBadges: gameState.earnedBadges
+                };
+                localStorage.setItem('pmGameProgress', JSON.stringify(progress));
+            } catch (e) {
+                console.log('Could not save progress');
+            }
+        }
+
+        function loadProgress() {
+            try {
+                const savedProgress = localStorage.getItem('pmGameProgress');
+                if (savedProgress) {
+                    const progress = JSON.parse(savedProgress);
+                    gameState.unlockedLevels = progress.unlockedLevels || [1];
+                    gameState.earnedBadges = progress.earnedBadges || [];
+                }
+            } catch (e) {
+                console.log('Could not load progress');
+            }
+        }
+
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone!')) {
+                localStorage.removeItem('pmGameProgress');
+                gameState.unlockedLevels = [1];
+                gameState.earnedBadges = [];
+                updateMenuDisplay();
+                alert('Progress reset successfully!');
+            }
+        }
+
+        function confirmQuit() {
+            if (confirm('Are you sure you want to quit? Your progress in this level will be lost.')) {
+                clearInterval(gameState.timerInterval);
+                document.querySelector('.powerup-container').style.display = 'none';
+                backToMenu();
+            }
+        }
+
+        // Initialize game
+        loadProgress();
+        updateMenuDisplay();
+    </script>
+</body>
+</html>
+                        
